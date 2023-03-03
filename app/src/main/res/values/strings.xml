@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">CustomViewPointerClock</string>
+    <string name="color_change">COLOR CHANGE:</string>
+    <string name="sec">sec</string>
+    <string name="hour">hour</string>
+    <string name="min">min</string>
+    <string name="text">text</string>
 </resources>

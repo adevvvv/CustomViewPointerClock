@@ -1,13 +1,14 @@
 package com.example.customviewpointerclocklib
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.RectF
+import android.graphics.*
+import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
+import androidx.annotation.RequiresApi
+import java.time.LocalDateTime
+import java.time.temporal.ChronoField
 import kotlin.math.min
 
 class CustomViewClock @JvmOverloads constructor(
@@ -127,5 +128,47 @@ class CustomViewClock @JvmOverloads constructor(
         )
         paint.style = Paint.Style.FILL
     }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onDraw(canvas: Canvas) {
+        val path = Path()
+        path.addCircle(centerX, centerY, radius, Path.Direction.CW)
+        canvas.clipPath(path)
+        paint.style = Paint.Style.FILL
+        paint.color = backgroundColor
+
+        canvas.drawCircle(centerX, centerY, radius - radius / 28.0f, mPaint)
+
+        paint.color = hourColor
+        canvas.drawCircle(centerX, centerY, radius / 25.7f, paint)
+        val now = LocalDateTime.now()
+        var hour = now.hour
+        val minute = now.minute
+        val second = now.second
+        val millis = now[ChronoField.MILLI_OF_SECOND]
+        hour = if (hour > 12) hour - 12 else hour
+        paint.color = hourColor
+        canvas.save()
+        canvas.rotate(hour * 30.0f + minute / 60.0f * 30.0f, centerX, centerY)
+        canvas.drawPath(hourPath, paint)
+        canvas.restore()
+
+        paint.color = minColor
+        canvas.save()
+        canvas.rotate(6.0f * minute + second / 60.0f * 6.0f, centerX, centerY)
+        canvas.drawPath(minPath, paint)
+        canvas.restore()
+
+        paint.color = secColor
+        canvas.save()
+        canvas.rotate(6.0f * second + millis / 1000.0f * 6.0f, centerX, centerY)
+        canvas.drawPath(secPath, paint)
+        canvas.restore()
+
+        canvas.drawCircle(centerX, centerX, radius / 45.0f, paint)
+        super.onDraw(canvas)
+    }
+
 
 }
