@@ -3,19 +3,23 @@ package com.example.customviewpointerclocklib
 import android.content.Context
 import android.graphics.*
 import android.os.Build
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.RequiresApi
 import java.time.LocalDateTime
 import java.time.temporal.ChronoField
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 class CustomViewClock @JvmOverloads constructor(
     context: Context?,
     attributeSet: AttributeSet? = null,
     i: Int = 0
 ) : View(context, attributeSet, i) {
+    private lateinit var backgroundBitmap: Bitmap
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private lateinit var mPaint: Paint
     private lateinit var minPath: Path
@@ -77,6 +81,7 @@ class CustomViewClock @JvmOverloads constructor(
         centerY = height / 2.0f
         radius = min(width / 2.0f, height / 2.0f)
 
+        drawBackGroundBitmap()
 
         var bottomY = width / 1.7f
         var topPadding = radius / 14.0f * 5.0f
@@ -139,7 +144,7 @@ class CustomViewClock @JvmOverloads constructor(
         paint.color = backgroundColor
 
         canvas.drawCircle(centerX, centerY, radius - radius / 28.0f, mPaint)
-
+        canvas.drawBitmap(backgroundBitmap, 0f, 0f, paint)
         paint.color = hourColor
         canvas.drawCircle(centerX, centerY, radius / 25.7f, paint)
         val now = LocalDateTime.now()
@@ -170,5 +175,133 @@ class CustomViewClock @JvmOverloads constructor(
         super.onDraw(canvas)
     }
 
+    private fun drawBackGroundBitmap() {
+        backgroundBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(backgroundBitmap)
+        paint.style = Paint.Style.STROKE
+        val outerWidth = radius / 14.0f
+        paint.strokeWidth = outerWidth
+        val shader: Shader = LinearGradient(
+            50f,
+            0f,
+            0f,
+            0f,
+            Color.rgb(0, 0, 0),
+            Color.rgb(255, 255, 255),
+            Shader.TileMode.MIRROR
+        )
+        paint.shader = shader
+
+        paint.shader = null
+        paint.style = Paint.Style.FILL
+        paint.color = Color.WHITE
+        var txt = 1
+        val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        textPaint.textSize = radius / 6.0f
+        textPaint.textAlign = Paint.Align.RIGHT
+        textPaint.color = Color.BLACK
+        val minus = 2 * outerWidth + 5
+        var i: Double = -60.0
+        while (i < 300) {
+            val xStart = (radius - 2 * outerWidth) * cos(Math.toRadians(i)) + centerX
+            val yStart = (radius - 2 * outerWidth) * sin(Math.toRadians(i)) + centerY
+            var xStart1: Double
+            var yStart1: Double
+
+            val w = textPaint.measureText(txt.toString() + "")
+            val a = (radius - minus - textPaint.textSize) * sin(Math.toRadians(i)) + centerY
+            val b = (radius - minus - w) * cos(Math.toRadians(i)) + centerX
+            when (i) {
+                -60.0 -> {
+                    textPaint.textAlign = Paint.Align.CENTER
+                    xStart1 = b + w / 4.0
+                    yStart1 = a + textPaint.textSize / 5.0
+                }
+                0.0 -> {
+                    textPaint.textAlign = Paint.Align.CENTER
+                    xStart1 = (radius - minus) * cos(Math.toRadians(i)) + centerX - w / 1.3
+                    yStart1 = a + textPaint.textSize / 2.5
+                }
+                30.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 2.0
+                    yStart1 = a + textPaint.textSize / 2.0
+                }
+                60.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 2.0
+                    yStart1 = a + textPaint.textSize / 1.8
+                }
+                90.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 2.0
+                    yStart1 = a + textPaint.textSize / 1.5
+                }
+                120.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 2.0
+                    yStart1 = a + textPaint.textSize / 1.5
+                }
+                150.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 2.0
+                    yStart1 = a + textPaint.textSize / 1.5
+                }
+                180.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 2.0
+                    yStart1 = a + textPaint.textSize / 2.4
+                }
+                210.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 3.0
+                    yStart1 =
+                        (radius - 40 - textPaint.textSize) * sin(Math.toRadians(i)) + centerY + textPaint.textSize / 2
+                }
+                240.0 -> {
+                    textPaint.textAlign = Paint.Align.RIGHT
+                    xStart1 = b + w / 3.0
+                    yStart1 = a + textPaint.textSize / 5.0
+                }
+                else -> {
+                    textPaint.textAlign = Paint.Align.CENTER
+                    xStart1 = b
+                    yStart1 = a
+                }
+            }
+            paint.color = Color.BLACK
+            if (i % 30.0 == 0.0) {
+                paint.color = dotColor
+                canvas.drawCircle(xStart.toFloat(), yStart.toFloat(), radius / 78.8f, paint)
+                textPaint.color = textColor
+                canvas.drawText(
+                    txt.toString() + "",
+                    xStart1.toFloat(),
+                    yStart1.toFloat(),
+                    textPaint
+                )
+                txt++
+            } else {
+                paint.color = dotColor
+                canvas.drawCircle(xStart.toFloat(), yStart.toFloat(), radius / 157.6f, paint)
+            }
+            i += 6
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                postInvalidate()
+                handler.postDelayed(this, 1)
+            }
+        }, 1)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        handler.removeCallbacksAndMessages(null)
+    }
 
 }
